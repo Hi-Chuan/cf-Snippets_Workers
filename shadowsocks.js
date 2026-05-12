@@ -1,11 +1,11 @@
 // 如需要使用环境变量,将底部注释取消
 import { connect } from 'cloudflare:sockets';
 
-let subPath = 'sub-x93-';     // 节点订阅路径,不修改将使用UUID作为订阅路径
+let subPath = 'sub-';     // 节点订阅路径,不修改将使用UUID作为订阅路径
 let proxyIP = 'Pro'+'xyIP.SG.'+'cm'+'liussss.net';  // proxyIP 格式：ip、域名、ip:port、域名:port等,没填写port，默认使用443,也可以是socks5
 let uuid = 'e2f44116-b739-4c60-b0a7-e0f85247717e';  // 节点UUID（用于SS协议认证，不对外暴露）
-let loginPwd = 'pw-5Y-';  // 订阅中心登录密码（独立于UUID，用于访问订阅页面）
-let SSpath = 'api';          // 路径验证，为空则使用UUID作为验证路径
+let loginPwd = 'password';  // 订阅中心登录密码（独立于UUID，用于访问订阅页面）
+let SSpath = '';          // 路径验证，为空则使用UUID作为验证路径
 
 // CF-CDN 格式:优选域名:端口#备注名称、优选IP:端口#备注名称、[ipv6优选]:端口#备注名称、优选域名#备注
 // 支持单个远程URL（返回纯文本，每行一个 host:port#name 格式）
