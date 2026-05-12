@@ -53,7 +53,7 @@
 ## snippets / workers 路径进阶用法
 
 ### 相关路径说明
-<img width="700" height="600" alt="image" src="https://github.com/user-attachments/assets/86b3dd1d-bbca-4786-9bb3-430bf6700024" />
+![proxyip](./proxyip.png)
 
 | 类型 | 示例 | 说明 |
 |------|------|------|
