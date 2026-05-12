@@ -1,7 +1,4 @@
 
-
-<div align="center">
-
 ## 功能特性
 
 - 🚀 基于 Cloudflare Workers 和 snippets 的高性能代理
