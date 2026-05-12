@@ -1,8 +1,8 @@
 import/**/{/**/connect as $c/**/}/**/from/**/'cloudflare:sockets';const _=o=>$c(o);
 // 用户配置
-const UUID = "bb99767b-960b-4452-ba2b-dc9c56f3f858"; // 可用的uuid
-const WP = "t8Y^nK5g!*czNG"; // 登录密码
-const SUB_PWD = "e85f5823-8ffe-4a74-955f-94a015784886"; // 订阅密码
+const UUID = "e2f44116-b739-4c60-b0a7-e0f85247717e"; // 可用的uuid
+const WP = "password"; // 登录密码
+const SUB_PWD = "sub-"; // 订阅密码
 let PIP = 'Pro'+'xyIP.SG.'+'cm'+'liussss.net';  // 自定义的中转ip
 let SUB = 'https://sub.841110.xyz/';  // 自定义的订阅源
 const PC = "https://kaic.hidns.co/";  // 中转检测站
