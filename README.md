@@ -1,2 +1,0 @@
-# cf-Snippets_Workers
-在workers或snippets上部署vless/trojan/shadowsocks代理节点，主流客户端一键订阅
