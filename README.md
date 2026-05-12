@@ -21,7 +21,7 @@
 
 | 变量名 | 描述 | 默认值 | 示例 |
 |--------|------|--------|------|
-| `UUID`或`AUTH`或`uuid` | 用户UUID | `5dc15e15-f285-4a9d-959b-0e4fbdd77b63` | `your-uuid` |
+| `UUID`或`AUTH`或`uuid` | 用户UUID | `e2f44116-b739-4c60-b0a7-e0f85247717e` | `your-uuid` |
 | `PROXYIP`或`proxyip`或`proxyIP` | 代理服务器IP列表 | `13.230.34.30` | `tw.tp81.netlib.re` |
 | `SUB_PATH`或`subpath` | 订阅路径 | `link` | `sub` |
 | `DISABLE_TROJAN`或`CLOSE_TROJAN` | 是否关闭Trojan协议，true关闭，false开启 | `false` | 默认开启 |
@@ -70,9 +70,9 @@ _acme-challenge
 ```
 
 ## shadowsocks 节点参数对照图
-节点path为SSpath变量或uuid开头，示例：`/5dc15e15-f285-4a9d-959b-0e4fbdd77b63/?ed=2560`   
+节点path为SSpath变量或uuid开头，示例：`/e2f44116-b739-4c60-b0a7-e0f85247717e/?ed=2560`   
 
-带proxyip的示例：`/5dc15e15-f285-4a9d-959b-0e4fbdd77b63/?ed=2560&proxyip=xxxx`  v2rayN上设置全局socks5或http出站
+带proxyip的示例：`/e2f44116-b739-4c60-b0a7-e0f85247717e/?ed=2560&proxyip=xxxx`  v2rayN上设置全局socks5或http出站
 
-小火箭示例: `/5dc15e15-f285-4a9d-959b-0e4fbdd77b63/proxyip=xxxx` 设置socks5或http全局出站,karing,nekobox一样设置
+小火箭示例: `/e2f44116-b739-4c60-b0a7-e0f85247717e/proxyip=xxxx` 设置socks5或http全局出站,karing,nekobox一样设置
 
