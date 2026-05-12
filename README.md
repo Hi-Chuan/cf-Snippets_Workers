@@ -2,22 +2,6 @@
 
 <div align="center">
 
-# Workers & Snippets deploy VLESS + trojan + shadowsocks
-
-**中文** | [English](README_EN.md)
-
-Telegram交流反馈群组: https://t.me/eooceu
-
-基于 Cloudflare Workers & Snippets 的高性能 VLESS+trojan 代理服务
-
-YouTube视频部署教程：https://youtu.be/GEcKz2NoKlM
-
-Shadowsocks部署视频教程：https://youtu.be/hUPN_69Atow
-
-pages部署视频教程：https://www.youtube.com/watch?v=kNi6OwJ_e5k
-
-</div>
-
 ## 功能特性
 
 - 🚀 基于 Cloudflare Workers 和 snippets 的高性能代理
@@ -95,7 +79,3 @@ _acme-challenge
 
 小火箭示例: `/5dc15e15-f285-4a9d-959b-0e4fbdd77b63/proxyip=xxxx` 设置socks5或http全局出站,karing,nekobox一样设置
 
-
-## 许可证
-
-GPL 2.0
