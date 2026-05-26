@@ -1,19 +1,18 @@
-// 如需要使用环境变量,将底部注释取消
 import { connect } from 'cloudflare:sockets';
 
-let subPath = 'sub-';     // 节点订阅路径,不修改将使用UUID作为订阅路径
-let proxyIP = 'Pro'+'xyIP.SG.'+'cm'+'liussss.net';  // proxyIP 格式：ip、域名、ip:port、域名:port等,没填写port，默认使用443,也可以是socks5
+let subPath = '';     // 节点订阅路径,不修改将使用UUID作为订阅路径
+let proxyIP = 'Pro'+'xyIP.US.'+'cm'+'liussss.net';  // proxyIP 格式：ip、域名、ip:port、域名:port等,没填写port，默认使用443,也可以是socks5
 let uuid = 'e2f44116-b739-4c60-b0a7-e0f85247717e';  // 节点UUID（用于SS协议认证，不对外暴露）
 let loginPwd = 'password';  // 订阅中心登录密码（独立于UUID，用于访问订阅页面）
 let SSpath = '';          // 路径验证，为空则使用UUID作为验证路径
+let cfip = ['https://raw.githubusercontent.com/Hi-Chuan/cf-WorkerSub/main/addressesapi.txt'];  // CF-CDN 格式：支持单个远程URL（返回纯文本，每行一个 优选域名/IP:端口#备注名称）
 
-// CF-CDN 格式:优选域名:端口#备注名称、优选IP:端口#备注名称、[ipv6优选]:端口#备注名称、优选域名#备注
-// 支持单个远程URL（返回纯文本，每行一个 host:port#name 格式）
-let cfip = ['https://raw.githubusercontent.com/Hi-Chuan/cf-WorkerSub/main/addressesapi.txt'];
+const WS_READY_STATE_OPEN = 1;
+const WS_READY_STATE_CLOSING = 2;
 
 function closeSocketQuietly(socket) {
     try { 
-        if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CLOSING) {
+        if (socket.readyState === WS_READY_STATE_OPEN || socket.readyState === WS_READY_STATE_CLOSING) {
             socket.close(); 
         }
     } catch (error) {} 
@@ -106,8 +105,10 @@ function isSpeedTestSite(hostname) {
 
 async function handleSSRequest(request, customProxyIP) {
     const wssPair = new WebSocketPair();
-    const [clientSock, serverSock] = Object.values(wssPair);
+    const clientSock = wssPair[0];
+    const serverSock = wssPair[1];
     serverSock.accept();
+    serverSock.binaryType = 'arraybuffer';
     let remoteConnWrapper = { socket: null };
     let isDnsQuery = false;
     const earlyData = request.headers.get('sec-websocket-protocol') || '';
@@ -366,8 +367,13 @@ function makeReadableStr(socket, earlyDataHeader) {
     let cancelled = false;
     return new ReadableStream({
         start(controller) {
-            socket.addEventListener('message', (event) => { 
-                if (!cancelled) controller.enqueue(event.data); 
+            socket.addEventListener('message', async (event) => {
+                if (cancelled) return;
+                let data = event.data;
+                if (data instanceof Blob) {
+                    data = await data.arrayBuffer();
+                }
+                controller.enqueue(data);
             });
             socket.addEventListener('close', () => { 
                 if (!cancelled) { 
@@ -377,8 +383,13 @@ function makeReadableStr(socket, earlyDataHeader) {
             });
             socket.addEventListener('error', (err) => controller.error(err));
             const { earlyData, error } = base64ToArray(earlyDataHeader);
-            if (error) controller.error(error); 
-            else if (earlyData) controller.enqueue(earlyData);
+            if (error) {
+                Promise.resolve().then(() => controller.error(error));
+            } else if (earlyData) {
+                Promise.resolve().then(() => {
+                    if (!cancelled) controller.enqueue(earlyData);
+                });
+            }
         },
         cancel() { 
             cancelled = true; 
@@ -391,9 +402,11 @@ async function connectStreams(remoteSocket, webSocket, headerData, retryFunc) {
     let header = headerData, hasData = false;
     await remoteSocket.readable.pipeTo(
         new WritableStream({
-            async write(chunk, controller) {
+            async write(chunk) {
                 hasData = true;
-                if (webSocket.readyState !== WebSocket.OPEN) controller.error('wsreadyState not open');
+                if (webSocket.readyState !== WS_READY_STATE_OPEN) {
+                    throw new Error('wsreadyState not open');
+                }
                 if (header) { 
                     const response = new Uint8Array(header.length + chunk.byteLength);
                     response.set(header, 0);
@@ -423,7 +436,7 @@ async function forwardataudp(udpChunk, webSocket, respHeader) {
         writer.releaseLock();
         await tcpSocket.readable.pipeTo(new WritableStream({
             async write(chunk) {
-                if (webSocket.readyState === WebSocket.OPEN) {
+                if (webSocket.readyState === WS_READY_STATE_OPEN) {
                     if (vlessHeader) { 
                         const response = new Uint8Array(vlessHeader.length + chunk.byteLength);
                         response.set(vlessHeader, 0);
@@ -444,7 +457,7 @@ async function forwardataudp(udpChunk, webSocket, respHeader) {
 function getSimplePage(request) {
     const url = request.headers.get('Host');
     const baseUrl = `https://${url}`;
-    const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Shadowsocks Cloudflare Service</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#7dd3ca 0%,#a17ec4 100%);height:100vh;display:flex;align-items:center;justify-content:center;color:#333;margin:0;padding:0;overflow:hidden;}.container{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:20px;padding:40px;box-shadow:0 20px 40px rgba(0,0,0,0.1);max-width:800px;width:95%;text-align:center;}.logo{margin-bottom:-20px;}.title{font-size:2rem;margin-bottom:30px;color:#2d3748;}.tip-content{color:#856404;font-size:1rem;}.highlight{font-weight:bold;color:#000;background:#fff;padding:2px 6px;border-radius:4px;}@media (max-width:768px){.container{padding:20px;}}</style></head><body><div class="container"><div class="logo"><img src="https://img.icons8.com/color/96/cloudflare.png" alt="Logo" width="96" height="96"></div><h1 class="title">Hello Shadowsocks！</h1><div class="tip-content">访问 <span class="highlight">${baseUrl}/你的登录密码</span> 进入订阅中心</div></div></body></html>`;
+    const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Shadowsocks Cloudflare Service</title><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#7dd3ca 0%,#a17ec4 100%);height:100vh;display:flex;align-items:center;justify-content:center;color:#333;margin:0;padding:0;overflow:hidden;}.container{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border-radius:20px;padding:40px;box-shadow:0 20px 40px rgba(0,0,0,0.1);max-width:800px;width:95%;text-align:center;}.logo{margin-bottom:-20px;}.title{font-size:2rem;margin-bottom:30px;color:#2d3748;}.tip-content{color:#856404;font-size:1rem;}.highlight{font-weight:bold;color:#000;background:#fff;padding:2px 6px;border-radius:4px;}@media (max-width:768px){.container{padding:20px;}}</style></head><body><div class="container"><div class="logo"><img src="https://img.icons8.com/color/96/cloudflare.png" alt="Logo" width="96" height="96"></div><h1 class="title">Hello Shadowsocks！</h1><div class="tip-content">访问 <span class="highlight">${baseUrl}/登录密码</span> 进入订阅中心</div></div></body></html>`;
     return new Response(html, {
         status: 200,
         headers: {
@@ -457,29 +470,21 @@ function getSimplePage(request) {
 export default {
     async fetch(request, env) {
         try {
-            // 环境变量支持（需要时取消注释）
-            // uuid = env.UUID || env.uuid || uuid;
-            // loginPwd = env.LOGIN_PWD || env.login_pwd || loginPwd;
-            // proxyIP = env.PROXYIP || env.proxyip || env.proxyIP || proxyIP;
-            // subPath = env.SUB_PATH || env.subpath || subPath;
-            // SSpath = env.SSPATH || env.sspath || SSpath;
-
-            // subPath / SSpath 默认使用 uuid（节点认证），与 loginPwd 完全隔离
             if (subPath === 'link' || subPath === '') { subPath = uuid; }
             if (SSpath === '') { SSpath = uuid; }
-
             let validPath = `/${SSpath}`;
             const servers = proxyIP.split(',').map(s => s.trim());
             proxyIP = servers[0];
             const method = 'none';
             const url = new URL(request.url);
             const pathname = url.pathname;
-
             let pathProxyIP = null;
             if (pathname.startsWith('/proxyip=')) {
                 try {
                     pathProxyIP = decodeURIComponent(pathname.substring(9)).trim();
-                } catch (e) {}
+                } catch (e) {
+                    // ignore error
+                }
                 if (pathProxyIP && !request.headers.get('Upgrade')) {
                     proxyIP = pathProxyIP;
                     return new Response(`set proxyIP to: ${proxyIP}\n\n`, {
@@ -491,7 +496,6 @@ export default {
                 }
             }
 
-            // WebSocket 连接：使用 SSpath（即uuid）做路径认证，uuid 不对外暴露
             if (request.headers.get('Upgrade') === 'websocket') {
                 if (!pathname.toLowerCase().startsWith(validPath.toLowerCase())) {
                     return new Response('Unauthorized', { status: 401 });
@@ -500,19 +504,16 @@ export default {
                 if (pathname.startsWith('/proxyip=')) {
                     try {
                         wsPathProxyIP = decodeURIComponent(pathname.substring(9)).trim();
-                    } catch (e) {}
+                    } catch (e) {
+                        // ignore error
+                    }
                 }
                 const customProxyIP = wsPathProxyIP || url.searchParams.get('proxyip') || request.headers.get('proxyip');
                 return await handleSSRequest(request, customProxyIP);
-
             } else if (request.method === 'GET') {
-
-                // 首页：只提示用登录密码访问，不暴露 uuid
                 if (pathname === '/') {
                     return getSimplePage(request);
                 }
-
-                // ✅ 订阅中心入口：使用独立 loginPwd 访问，uuid 完全不出现在 URL 中
                 if (pathname.toLowerCase() === `/${loginPwd.toLowerCase()}`) {
                     const typelink = 'c' + 'l' + 'a' + 's' + 'h';
                     const currentDomain = url.hostname;
@@ -530,12 +531,10 @@ export default {
                     });
                 }
 
-                // 订阅内容路由 /sub/UUID：返回节点列表，路径本身不对外展示
                 if (pathname.toLowerCase() === `/sub/${subPath.toLowerCase()}` || pathname.toLowerCase() === `/sub/${subPath.toLowerCase()}/`) {
                     const currentDomain = url.hostname;
                     const ssHeader = 's' + 's';
                     let currentCfip = cfip;
-                    // 如果 cfip 只有一个 http/https URL，则远程拉取内容
                     if (cfip.length === 1 && (cfip[0].startsWith('http://') || cfip[0].startsWith('https://'))) {
                         try {
                             const response = await fetch(cfip[0]);
@@ -566,7 +565,6 @@ export default {
                         } else {
                             host = cdnItem;
                         }
-                        // 节点认证固定使用 uuid，与 loginPwd 完全隔离
                         const ssConfig = `${method}:${uuid}`;
                         const ssNodeName = nodeName ? `${nodeName}-${ssHeader}` : `${ssHeader}`;
                         const encodedConfig = btoa(ssConfig);
