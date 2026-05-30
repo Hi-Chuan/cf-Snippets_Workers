@@ -1,6 +1,6 @@
 import { connect } from 'cloudflare:sockets';
 
-let subPath = '';     // 节点订阅路径,不修改将使用UUID作为订阅路径
+let subPath = 'link';     // 节点订阅路径,不修改将使用UUID作为订阅路径
 let proxyIP = 'Pro'+'xyIP.US.'+'cm'+'liussss.net';  // proxyIP 格式：ip、域名、ip:port、域名:port等,没填写port，默认使用443,也可以是socks5
 let UUID = 'e2f44116-b739-4c60-b0a7-e0f85247717e';  // 节点UUID（用于协议认证，不对外暴露）
 let loginPwd = 'password';  // 订阅中心登录密码（独立于UUID，用于访问订阅页面）
